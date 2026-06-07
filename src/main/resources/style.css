@@ -195,3 +195,141 @@
 .create-table:hover {
     -fx-text-fill: white;
 }
+
+.text-field, .combo-box {
+    -fx-pref-height: 40px;
+    -fx-min-height: 40px;
+    -fx-max-height: 40px;
+    -fx-padding: 0 10px 0 10px; 
+}
+
+.combo-box {
+    -fx-background-color: #252a34; 
+    -fx-border-color: #2c323f;  
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-pref-height: 40px;
+    -fx-min-height: 40px;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: #eceff4;
+    -fx-background-color: transparent;
+}
+
+.combo-box:focused {
+    -fx-border-color: #00adb5;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #252a34;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-text-fill: #eceff4;
+    -fx-padding: 8px;
+}
+
+.combo-box-popup .list-view .list-cell:filled:hover {
+    -fx-background-color: #00adb5;
+    -fx-text-fill: #1e222b;
+}
+
+.create-db-window .checkbox {
+    -fx-text-fill: #eceff4;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+
+    -fx-alignment: CENTER; 
+    -fx-padding: 0;
+}
+
+.create-db-window .checkbox .box {
+    -fx-background-color: #252a34;
+    -fx-border-color: #2c323f;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+    -fx-padding: 3px;
+}
+
+.create-db-window .checkbox:hover .box {
+    -fx-border-color: #00adb5;
+}
+
+.create-db-window .checkbox:selected .box {
+    -fx-background-color: #00adb5;
+    -fx-border-color: #00adb5;
+}
+
+.create-db-window .checkbox:selected .mark {
+    -fx-background-color: #1e222b;
+}
+
+.tooltip {
+    -fx-background-color: #2c323f; 
+    -fx-text-fill: #eceff4;       
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 12px;
+    -fx-padding: 5px 10px;
+    -fx-border-color: #00adb5;   
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.welcome-page {
+    -fx-background-color: #1a1d24; 
+    -fx-padding: 60px;
+}
+
+.welcome-title {
+    -fx-text-fill: #eceff4;
+    -fx-font-size: 28px;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 1px;
+}
+
+.welcome-subtitle {
+    -fx-text-fill: #6c7380;
+    -fx-font-size: 14px;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-max-width: 360px;
+    -fx-wrap-text: true;
+    -fx-text-alignment: center;
+    -fx-padding: 0 0 10px 0;
+}
+
+.welcome-btn {
+    -fx-background-color: #252a34;
+    -fx-text-fill: #eceff4;
+    -fx-font-size: 14px;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-weight: bold;
+    -fx-padding: 12px 24px;
+    -fx-border-color: #2c323f;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-min-width: 160px;
+}
+
+.welcome-btn:hover {
+    -fx-background-color: #2c323f;
+    -fx-border-color: #434c5e;
+}
+
+.welcome-btn-primary {
+    -fx-background-color: #00adb5;
+    -fx-text-fill: #1e222b;
+    -fx-border-color: #00adb5;
+}
+
+.welcome-btn-primary:hover {
+    -fx-background-color: #00cfd6;
+    -fx-border-color: #00cfd6;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 173, 181, 0.3), 10, 0, 0, 0);
+}
