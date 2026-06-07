@@ -26,10 +26,12 @@ import javafx.scene.control.TableColumn;
 import javafx.beans.property.SimpleStringProperty; 
 
 import javafx.scene.image.Image;    
-import javafx.scene.image.ImageView;
 
 import java.io.File;
 import java.io.IOException;
+
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
 public class App extends Application
 {
@@ -88,10 +90,19 @@ public class App extends Application
                     File database = new File(fileLocation.getText() + "/" + dbName.getText() + ".db");
                     if (database.createNewFile()) 
                     {
-                        System.out.println("File created: " + database.getName());
+                        Alert alert = new Alert(AlertType.INFORMATION);
+                        alert.setTitle("Success");
+                        alert.setHeaderText("Database created successfully");
+
+                        alert.show();
+                        createDbStage.hide();
                     } else
                     {
-                        System.out.println("File already exists.");
+                        Alert alert = new Alert(AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText("File already exists");
+
+                        alert.show();
                     }
                 } catch (IOException e)
                 {
