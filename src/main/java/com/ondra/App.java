@@ -1,6 +1,7 @@
 package com.ondra;
 
 import javafx.application.Application; 
+
 import javafx.stage.Stage;            
 import javafx.scene.Scene;
 import javafx.scene.layout.Border;
@@ -14,27 +15,50 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.control.ListView;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;      
-
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
-
 import javafx.scene.control.TableView;   
 import javafx.scene.control.TableColumn;  
-import javafx.beans.property.SimpleStringProperty; 
-
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;    
+
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;      
+
+import javafx.beans.property.SimpleStringProperty; 
 
 import java.io.File;
 import java.io.IOException;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+class error
+{
+    static public void showError(SQLException e) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setHeaderText("Error");
+                                
+        java.io.StringWriter sw = new java.io.StringWriter();
+        java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+        e.printStackTrace(pw);
+        String stackTrace = sw.toString();
+                                
+        alert.setContentText(stackTrace);
+
+        alert.show();
+    }
+}
 
 public class App extends Application
 {
+    private Connection connection;
     public static void main(String[] args) 
     {
         launch(args);
@@ -95,7 +119,7 @@ public class App extends Application
                         alert.setHeaderText("Database created successfully");
 
                         alert.show();
-                        createDbStage.hide();
+                        createDbStage.close();
                     } else
                     {
                         Alert alert = new Alert(AlertType.ERROR);
@@ -149,9 +173,115 @@ public class App extends Application
 
             if (selectedFile != null) 
             {
+                try
+                {
+                    if (connection != null) connection.close();
+        
+                    connection = DriverManager.getConnection("jdbc:sqlite:" + selectedFile.getAbsolutePath());
+                    Statement statement = connection.createStatement();
+                    
+                    SplitPane splitPane = new SplitPane();
+                    HBox headerBox = new HBox();
+                    VBox leftPanel = new VBox(); 
+                    Label tablesLabel = new Label("Tables");
+                    Button createTable = new Button("+"); 
+                    ListView<String> tableList = new ListView<>();
+                    TableView<String> dataTable = new TableView<>();
+    
+                    createTable.setOnAction(ev -> {
+                        VBox vbox = new VBox();
+                        BorderPane createTableLayout = new BorderPane();
+                        Scene scene = new Scene(createTableLayout);
+                        Stage createTableStage = new Stage();
+                        TextField tableName = new TextField();
+                        Label tableLabelName = new Label("Table Name:");
+                        Button create = new Button("Create");
+                        HBox createButtonRow = new HBox(create);
 
-            } 
-            else 
+                        create.setOnAction(eve -> {
+                            try 
+                            {
+                                String name = tableName.getText().trim();
+                                if (name.isEmpty()) {
+                                    throw new SQLException("Table name cannot be empty");
+                                }
+
+                                String sql = "CREATE TABLE " + name + " (id INTEGER PRIMARY KEY)";
+                                
+                                statement.executeUpdate(sql);
+
+                                tableList.getItems().add(name);
+                                
+                                ((Stage) create.getScene().getWindow()).close();
+                            } catch (SQLException e) {
+                                error.showError(e);
+                            }
+                        });
+
+                        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+                        
+                        create.getStyleClass().add("create");
+                        createButtonRow.setAlignment(javafx.geometry.Pos.CENTER);
+
+                        vbox.getChildren().addAll(tableLabelName, tableName, createButtonRow);
+                        vbox.getStyleClass().add("vbox");
+                        javafx.scene.layout.VBox.setMargin(createButtonRow, new javafx.geometry.Insets(20, 0, 0, 0));
+
+                        createTableLayout.getStyleClass().add("create-db-window");
+                        createTableLayout.setCenter(vbox);
+                        
+                        
+                        createTableStage.initOwner(primaryStage);
+                        createTableStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+                        
+                        createTableStage.getIcons().add(icon);
+                        createTableStage.setTitle("Create new table");
+                        createTableStage.centerOnScreen();
+                        createTableStage.setHeight(250);
+                        createTableStage.setWidth(512);
+                        createTableStage.setScene(scene);
+                        createTableStage.showAndWait();
+                    });
+                    
+                    splitPane.getStyleClass().add("split-pane");
+                    headerBox.getStyleClass().add("header-box");
+                    leftPanel.getStyleClass().add("left-panel");
+                    tablesLabel.getStyleClass().add("tables-header");
+                    createTable.getStyleClass().add("create-table");
+                    dataTable.getStyleClass().add("table-view");
+    
+                    headerBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                    headerBox.setSpacing(10);
+    
+                    tablesLabel.setMaxWidth(Double.MAX_VALUE);
+                    javafx.scene.layout.HBox.setHgrow(tablesLabel, javafx.scene.layout.Priority.ALWAYS); 
+    
+                    headerBox.getChildren().addAll(tablesLabel, createTable);
+                    
+                    javafx.scene.layout.VBox.setVgrow(tableList, javafx.scene.layout.Priority.ALWAYS);
+    
+                    leftPanel.getChildren().addAll(headerBox, tableList);
+    
+                    java.sql.DatabaseMetaData metaData = connection.getMetaData();
+                    java.sql.ResultSet tables = metaData.getTables(null, null, null, new String[]{"TABLE"});
+                    
+                    tableList.getItems().clear(); 
+                    
+                    while (tables.next()) {
+                        tableList.getItems().add(tables.getString("TABLE_NAME"));
+                    }
+
+                    dataTable.setPlaceholder(new Label("Choose a table from the left panel to view data"));
+    
+                    splitPane.getItems().addAll(leftPanel, dataTable);
+                    splitPane.setDividerPositions(0.25f);
+    
+                    mainLayout.setCenter(splitPane);
+                } catch (SQLException e)
+                {
+                    error.showError(e);
+                }   
+            } else 
             {
 
             }
