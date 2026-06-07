@@ -42,7 +42,7 @@ cd database-client
 mvn clean javafx:run
 ```
 
-## 📂 Struktura Projektu
+## Struktura Projektu
 
 ```text
 ├── src/
