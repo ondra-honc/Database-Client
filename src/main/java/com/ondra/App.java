@@ -13,7 +13,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
-import javafx.scene.control.ListView; 
+import javafx.scene.control.ListView;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;      
 
 import javafx.scene.control.MenuBar;
@@ -26,6 +27,9 @@ import javafx.beans.property.SimpleStringProperty;
 
 import javafx.scene.image.Image;    
 import javafx.scene.image.ImageView;
+
+import java.io.File;
+import java.io.IOException;
 
 public class App extends Application
 {
@@ -53,35 +57,73 @@ public class App extends Application
             VBox vbox = new VBox();
             HBox hbox = new HBox();    
             Button directoryChooser = new Button("Browse...");
+            Button create = new Button("Create");
             TextField fileLocation = new TextField();
             TextField dbName = new TextField();
             Label labelName = new Label("Database Name:");
-            Label labelLocation = new Label("Database Location:");            
+            Label labelLocation = new Label("Database Location:");    
+            Stage createDbStage = new Stage();
+            BorderPane createDbLayout = new BorderPane();
+            Scene scene = new Scene(createDbLayout);
+            HBox createButtonRow = new HBox(create);
+            
+            directoryChooser.setOnAction(e -> {
+                javafx.stage.DirectoryChooser dirChooser = new javafx.stage.DirectoryChooser();
+                dirChooser.setTitle("Select Database Folder");
+
+                java.io.File selectedDirectory = dirChooser.showDialog(createDbStage);
+
+                if (selectedDirectory != null) 
+                {
+                    fileLocation.setText(selectedDirectory.getAbsolutePath());
+                } else 
+                {
+
+                }
+            });
+
+            create.setOnAction(evnt -> {
+                try 
+                {
+                    File database = new File(fileLocation.getText() + "/" + dbName.getText() + ".db");
+                    if (database.createNewFile()) 
+                    {
+                        System.out.println("File created: " + database.getName());
+                    } else
+                    {
+                        System.out.println("File already exists.");
+                    }
+                } catch (IOException e)
+                {
+                    System.out.println("An error occurred.");
+                    e.printStackTrace(); 
+                }
+            });
 
             hbox.getChildren().addAll(fileLocation, directoryChooser);
 
-            vbox.getChildren().addAll(labelName, dbName, labelLocation, hbox);
+            createButtonRow.setAlignment(javafx.geometry.Pos.CENTER);
+            vbox.getChildren().addAll(labelName, dbName, labelLocation, hbox, createButtonRow);
 
-            BorderPane createDbLayout = new BorderPane();
             createDbLayout.setCenter(vbox);
-
-            Stage createDbStage = new Stage();
-            
-            Scene scene = new Scene(createDbLayout);
             
             scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
             
             createDbLayout.getStyleClass().add("create-db-window");
             vbox.getStyleClass().add("vbox");
             hbox.getStyleClass().add("hbox");
+            create.getStyleClass().add("create");
 
+            createDbStage.initOwner(primaryStage);
+            createDbStage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            
             createDbStage.getIcons().add(icon);
             createDbStage.setTitle("Create Database");
             createDbStage.centerOnScreen();
-            createDbStage.setHeight(325);
+            createDbStage.setHeight(300);
             createDbStage.setWidth(512);
             createDbStage.setScene(scene);
-            createDbStage.show();
+            createDbStage.showAndWait();
         });
 
         openDb.setOnAction(event -> {
@@ -94,10 +136,12 @@ public class App extends Application
 
             java.io.File selectedFile = fileChooser.showOpenDialog(primaryStage);
 
-            if (selectedFile != null) {
+            if (selectedFile != null) 
+            {
 
             } 
-            else {
+            else 
+            {
 
             }
 

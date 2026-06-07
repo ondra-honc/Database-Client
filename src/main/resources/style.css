@@ -74,7 +74,6 @@
     -fx-border-color: #00adb5;  
 }
 
-/* 5. Vodorovný řádek s lokací (HBox) */
 .create-db-window .hbox {
     -fx-spacing: 10px;             
     -fx-alignment: center-left;
@@ -100,3 +99,25 @@
     -fx-text-fill: #1e222b;
 }
 
+.create-db-window .create {
+    -fx-background-color: #00adb5; 
+    -fx-text-fill: #1e222b;       
+    -fx-font-weight: bold;          
+    -fx-font-size: 13px;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-padding: 10px 25px; 
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;             
+
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 173, 181, 0.2), 10, 0, 0, 4);
+}
+
+.create-db-window .create:hover {
+    -fx-background-color: #00cfd6; 
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 207, 214, 0.4), 12, 0, 0, 4);
+}
+
+.create-db-window .create:armed {
+    -fx-background-color: #008c92;  
+}
