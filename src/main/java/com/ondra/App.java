@@ -1,64 +1,53 @@
 package com.ondra;
 
-import javafx.application.Application; 
-
-import javafx.stage.Stage;            
-import javafx.scene.Scene;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;       
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;     
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.cell.TextFieldListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableView;   
-import javafx.scene.control.TableColumn;  
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;    
-import javafx.scene.image.ImageView;
-import javafx.scene.control.ButtonType;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-
-import javafx.stage.Modality;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;      
-
-import javafx.util.Duration;
-
-import javafx.beans.property.SimpleStringProperty; 
-
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-
 import java.io.File;
-import java.io.IOException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringWriter;
-
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.DatabaseMetaData;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import javafx.application.Application;            
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;    
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 
 class ErrorHandler
 {
@@ -100,6 +89,104 @@ class ErrorHandler
 public class App extends Application
 {
     private Connection connection;
+    
+    private HBox createTableMetadataHeader(String tableName) {
+        HBox headerBox = new HBox();
+        headerBox.setStyle("-fx-padding: 15; -fx-border-color: #cccccc; -fx-border-width: 0 0 1 0; -fx-alignment: CENTER_LEFT;");
+        headerBox.setSpacing(10);
+        headerBox.setAlignment(Pos.CENTER_LEFT);
+
+        try {
+            DatabaseMetaData metaData = connection.getMetaData();
+            ResultSet columns = metaData.getColumns(null, null, tableName, null);
+            ResultSet primaryKeys = metaData.getPrimaryKeys(null, null, tableName);
+
+            Label tableNameLabel = new Label("Table: " + tableName);
+            tableNameLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: white;");
+
+            StringBuilder pkInfo = new StringBuilder("Primary Key(s): ");
+            while (primaryKeys.next()) {
+                pkInfo.append(primaryKeys.getString("COLUMN_NAME")).append(", ");
+            }
+            if (pkInfo.toString().endsWith(", ")) {
+                pkInfo.setLength(pkInfo.length() - 2);
+            }
+            Label pkLabel = new Label(pkInfo.toString());
+            pkLabel.setStyle("-fx-font-size: 12; -fx-text-fill: white;");
+
+            StringBuilder columnsInfo = new StringBuilder("Columns: ");
+            int columnCount = 0;
+            columns = metaData.getColumns(null, null, tableName, null);
+            while (columns.next()) {
+                columnCount++;
+                String colName = columns.getString("COLUMN_NAME");
+                String colType = columns.getString("TYPE_NAME");
+                columnsInfo.append(colName).append(" (").append(colType).append("), ");
+            }
+            if (columnsInfo.toString().endsWith(", ")) {
+                columnsInfo.setLength(columnsInfo.length() - 2);
+            }
+            Label columnsLabel = new Label(columnsInfo.toString());
+            columnsLabel.setStyle("-fx-font-size: 12; -fx-wrap-text: true; -fx-text-fill: white;");
+            columnsLabel.setWrapText(true);
+
+            headerBox.getChildren().addAll(tableNameLabel, pkLabel, columnsLabel);
+
+        } catch (SQLException e) {
+            ErrorHandler.showError(e);
+        }
+
+        return headerBox;
+    }
+
+    private VBox loadTableData(String tableName) {
+        VBox container = new VBox();
+        
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM " + tableName);
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            TableView<ObservableList<String>> tableView = new TableView<>();
+            tableView.getColumns().clear();
+            tableView.getItems().clear();
+
+            for (int i = 1; i <= columnCount; i++) {
+                final int columnIndex = i - 1;
+                String columnName = metaData.getColumnName(i);
+                
+                TableColumn<ObservableList<String>, String> column = new TableColumn<>(columnName);
+                column.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().get(columnIndex)));
+                column.setPrefWidth(100);
+                
+                tableView.getColumns().add(column);
+            }
+
+            while (resultSet.next()) {
+                ObservableList<String> row = FXCollections.observableArrayList();
+                for (int i = 1; i <= columnCount; i++) {
+                    String value = resultSet.getString(i);
+                    row.add(value != null ? value : "");
+                }
+                tableView.getItems().add(row);
+            }
+
+            resultSet.close();
+            statement.close();
+
+            VBox.setVgrow(tableView, Priority.ALWAYS);
+            container.getChildren().addAll(
+                createTableMetadataHeader(tableName),
+                tableView
+            );
+
+        } catch (Exception e) {
+            ErrorHandler.showError(e);
+        }
+
+        return container;
+    }
     public static void main(String[] args) 
     {
         launch(args);
@@ -262,7 +349,7 @@ public class App extends Application
                     Button createTable = new Button("+"); 
                     Button deleteTable = new Button("-");
                     ListView<String> tableList = new ListView<>();
-                    TableView<String> dataTable = new TableView<>();
+                    TableView<ObservableList<String>> dataTable = new TableView<>();
     
                     deleteTable.setOnAction(evnt -> {
                         String selectedTable = tableList.getSelectionModel().getSelectedItem();
@@ -320,6 +407,8 @@ public class App extends Application
                             }
                         });
 
+                        
+                        
                         create.setOnAction(ev -> {
                             try 
                             {
@@ -357,7 +446,8 @@ public class App extends Application
                                 ErrorHandler.showError(e);
                             }
                         });
-
+                        
+                        
                         hbox.getChildren().addAll(PKName, typeComboBox, autoIncrementCheck);
                         hbox.setAlignment(Pos.CENTER_LEFT);
                         HBox.setMargin(typeComboBox, new Insets(0, 0, 0, 10));
@@ -372,7 +462,7 @@ public class App extends Application
                         vbox.getChildren().addAll(tableLabelName, tableName, PKLabelName, hbox, createButtonRow);
                         vbox.getStyleClass().add("vbox");
                         VBox.setMargin(createButtonRow, new Insets(20, 0, 0, 0));
-
+                        
                         createTableLayout.getStyleClass().add("create-db-window");
                         createTableLayout.setCenter(vbox);
                         
@@ -396,19 +486,19 @@ public class App extends Application
                     createTable.getStyleClass().add("create-table");
                     deleteTable.getStyleClass().add("create-table");
                     dataTable.getStyleClass().add("table-view");
-    
+                    
                     headerBox.setAlignment(Pos.CENTER_LEFT);
                     headerBox.setSpacing(10);
-    
+                    
                     tablesLabel.setMaxWidth(Double.MAX_VALUE);
                     HBox.setHgrow(tablesLabel, Priority.ALWAYS); 
-    
+                    
                     headerBox.getChildren().addAll(tablesLabel, createTable, deleteTable);
                     
                     VBox.setVgrow(tableList, Priority.ALWAYS);
-    
+                    
                     leftPanel.getChildren().addAll(headerBox, tableList);
-    
+                    
                     DatabaseMetaData metaData = connection.getMetaData();
                     ResultSet tables = metaData.getTables(null, null, null, new String[]{"TABLE"});
                     
@@ -418,10 +508,19 @@ public class App extends Application
                         tableList.getItems().add(tables.getString("TABLE_NAME"));
                     }
 
-                    dataTable.setPlaceholder(new Label("Choose a table from the left panel to view data"));
-    
+                    VBox emptyContainer = new VBox();
+                    emptyContainer.setAlignment(Pos.CENTER);
+                    emptyContainer.getChildren().add(new Label("Choose a table from the left panel to view data")); 
+                    
                     splitPane.getItems().addAll(leftPanel, dataTable);
                     splitPane.setDividerPositions(0.25f);
+
+                    tableList.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                        if (newVal != null) {
+                            VBox tableContainer = loadTableData(newVal);
+                            splitPane.getItems().set(1, tableContainer);
+                        }
+                    });
     
                     mainLayout.setCenter(splitPane);
                 } catch (SQLException e)
