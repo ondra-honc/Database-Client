@@ -29,11 +29,11 @@ Moderní, lehký a rychlý desktopový klient pro správu SQLite databází post
 ## Instalace a Spuštění
 
 ### Požadavky
-Ujistěte se, že máte nainstalované JDK (verze 17 nebo novější) a nakonfigurovaný Maven/Gradle.
+Ujistěte se, že máte nainstalované JDK (verze 17 nebo novější) a nakonfigurovaný Maven.
 
 ### Klonování projektu
 ```bash
-git clone [https://github.com/vyskocil-ondra/database-client.git](https://github.com/vyskocil-ondra/database-client.git)
+git clone https://github.com/ondra-honc/Database-Client.git
 ```
 
 ### Spuštění Mavenu
